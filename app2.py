@@ -7,6 +7,7 @@ import requests
 import json
 import pandas as pd
 import plotly.express as px
+from streamlit_drawable_canvas import st_canvas
 
 st.set_page_config(page_title="PDF-Bauteilerkennung", layout="wide")
 st.title("📐 PDF-Plan hochladen, Template ausschneiden und auswerten")
@@ -35,22 +36,29 @@ if uploaded_pdf:
     plan_image = convert_pdf_page_to_image(doc.write(), dpi=dpi, page_number=page_num - 1)
 
     st.subheader(f"🖼️ Vorschau – Seite {page_num} (DPI: {dpi})")
-    st.image(plan_image, use_column_width=True)
 
-    st.markdown("---")
-    st.subheader("✂️ Template-Ausschnitt definieren")
-    st.info("Gib zwei Koordinaten an: links oben und rechts unten")
-    col1, col2 = st.columns(2)
-    with col1:
-        x1 = st.number_input("🔹 X (oben links)", min_value=0, value=0)
-        y1 = st.number_input("🔹 Y (oben links)", min_value=0, value=0)
-    with col2:
-        x2 = st.number_input("🔸 X (unten rechts)", min_value=1, value=100)
-        y2 = st.number_input("🔸 Y (unten rechts)", min_value=1, value=100)
+    # --- Template Auswahl per Ziehen eines Kästchens ---
+    st.subheader("✂️ Ziehe ein Rechteck über den gewünschten Template-Bereich")
+    canvas_result = st_canvas(
+        fill_color="rgba(255, 0, 0, 0.3)",
+        stroke_width=3,
+        background_image=plan_image,
+        update_streamlit=True,
+        height=plan_image.height,
+        width=plan_image.width,
+        drawing_mode="rect",
+        key="canvas",
+    )
 
-    if x2 > x1 and y2 > y1:
+    if canvas_result.json_data and canvas_result.json_data["objects"]:
+        obj = canvas_result.json_data["objects"][0]
+        left = int(obj["left"])
+        top = int(obj["top"])
+        width = int(obj["width"])
+        height = int(obj["height"])
+
         # --- Ausschnitt extrahieren ---
-        cropped = plan_image.crop((x1, y1, x2, y2))
+        cropped = plan_image.crop((left, top, left + width, top + height))
         st.subheader("📦 Ausgeschnittenes Template")
         st.image(cropped, caption="Dein Template-Ausschnitt", use_column_width=False)
 
@@ -115,4 +123,5 @@ if uploaded_pdf:
         st.plotly_chart(fig, use_container_width=True)
 else:
     st.info("⬆️ Bitte lade zunächst eine PDF-Datei hoch.")
+
 
