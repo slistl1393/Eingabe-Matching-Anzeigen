@@ -40,6 +40,8 @@ if uploaded_pdf:
     image_pil.save(image_bytes, format='PNG')
     image_bytes.seek(0)
     st_image_for_canvas = Image.open(image_bytes)
+    st_image_for_canvas.format = 'PNG'
+
 
     st.subheader(f"🖼️ Vorschau – Seite {page_num} (DPI: {dpi})")
     st.image(image_pil, use_column_width=True)
