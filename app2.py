@@ -33,19 +33,26 @@ if uploaded_pdf:
     doc = fitz.open(stream=uploaded_pdf.read(), filetype="pdf")
     num_pages = len(doc)
     page_num = st.number_input("Seitenzahl wählen", min_value=1, max_value=num_pages, value=1)
-    plan_image = convert_pdf_page_to_image(doc.write(), dpi=dpi, page_number=page_num - 1).convert("RGB")
+    image_pil = convert_pdf_page_to_image(doc.write(), dpi=dpi, page_number=page_num - 1).convert("RGB")
+
+    # In-Memory PNG erzeugen
+    image_bytes = io.BytesIO()
+    image_pil.save(image_bytes, format='PNG')
+    image_bytes.seek(0)
+    st_image_for_canvas = Image.open(image_bytes)
 
     st.subheader(f"🖼️ Vorschau – Seite {page_num} (DPI: {dpi})")
+    st.image(image_pil, use_column_width=True)
 
     # --- Template Auswahl per Ziehen eines Kästchens ---
     st.subheader("✂️ Ziehe ein Rechteck über den gewünschten Template-Bereich")
     canvas_result = st_canvas(
         fill_color="rgba(255, 0, 0, 0.3)",
         stroke_width=3,
-        background_image=plan_image,
+        background_image=st_image_for_canvas,
         update_streamlit=True,
-        height=plan_image.height,
-        width=plan_image.width,
+        height=st_image_for_canvas.height,
+        width=st_image_for_canvas.width,
         drawing_mode="rect",
         key="canvas",
     )
@@ -58,7 +65,7 @@ if uploaded_pdf:
         height = int(obj["height"])
 
         # --- Ausschnitt extrahieren ---
-        cropped = plan_image.crop((left, top, left + width, top + height))
+        cropped = image_pil.crop((left, top, left + width, top + height))
         st.subheader("📦 Ausgeschnittenes Template")
         st.image(cropped, caption="Dein Template-Ausschnitt", use_column_width=False)
 
@@ -113,7 +120,7 @@ if uploaded_pdf:
             for t in sample_json for m in t.get("matches", [])
         ])
 
-        fig = px.imshow(plan_image, binary_format="jpg")
+        fig = px.imshow(image_pil, binary_format="jpg")
         fig.update_layout(title="📍 Treffer auf dem Gesamtplan", width=1200, height=800)
         fig.add_scatter(
             x=df["x"], y=df["y"], mode="markers", marker=dict(size=10, color="red"),
