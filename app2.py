@@ -33,7 +33,7 @@ if uploaded_pdf:
     doc = fitz.open(stream=uploaded_pdf.read(), filetype="pdf")
     num_pages = len(doc)
     page_num = st.number_input("Seitenzahl wählen", min_value=1, max_value=num_pages, value=1)
-    plan_image = convert_pdf_page_to_image(doc.write(), dpi=dpi, page_number=page_num - 1)
+    plan_image = convert_pdf_page_to_image(doc.write(), dpi=dpi, page_number=page_num - 1).convert("RGB")
 
     st.subheader(f"🖼️ Vorschau – Seite {page_num} (DPI: {dpi})")
 
