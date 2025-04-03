@@ -4,3 +4,4 @@ Pillow
 numpy
 plotly
 pandas
+streamlit-drawable-canvas
