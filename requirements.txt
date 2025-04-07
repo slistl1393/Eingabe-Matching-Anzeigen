@@ -1,7 +1,5 @@
 streamlit
 pymupdf
 Pillow
-numpy
-pandas
-plotly
 streamlit-image-coordinates
+
