@@ -34,7 +34,7 @@ if uploaded_pdf:
     # --- Vorschau mit Markern ---
     st.subheader("🔍 Zoombare Vorschau des Plans mit Auswahlpunkten")
     preview_array = np.array(image)
-    fig = px.imshow(preview_array)
+    fig = px.imshow(preview_array, binary_format='png')
     fig.update_layout(
         dragmode="zoom",
         margin=dict(l=10, r=10, t=30, b=10),
