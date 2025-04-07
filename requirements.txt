@@ -1,8 +1,7 @@
-streamlit==1.28.2
+streamlit
 pymupdf
 Pillow
 numpy
-plotly
 pandas
-streamlit-drawable-canvas>=0.9.3
+plotly
 streamlit-image-coordinates
