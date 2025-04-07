@@ -61,6 +61,7 @@ if uploaded_pdf:
 
     # --- Template ausschneiden nach 2 Klicks ---
     if coords and len(coords) >= 2:
+        st.success("✅ Zwei Punkte gesetzt, Ausschnitt wird erstellt.")
         x1, y1 = coords[0]["x"], coords[0]["y"]
         x2, y2 = coords[1]["x"], coords[1]["y"]
         left, top = min(x1, x2), min(y1, y2)
@@ -92,43 +93,8 @@ if uploaded_pdf:
             # Beispiel (nur angedeutet, echte URL/API-Key etc. nötig):
             # response = requests.post("https://mein-backend.de/match", files={"template": buf, "plan": ...})
             # result = response.json()
-
-        # Platzhalterdaten anzeigen
-        st.header("📦 Übersicht erkannter Bauteile (Demo)")
-        sample_json = [{
-            "bauteil": "Isokorb XT",
-            "count": 4,
-            "matches": [
-                {"position": {"x": 150, "y": 200}},
-                {"position": {"x": 420, "y": 180}},
-                {"position": {"x": 610, "y": 380}},
-                {"position": {"x": 250, "y": 480}}
-            ]
-        }]
-
-        for template in sample_json:
-            bauteil = template.get("bauteil", "Unbekannt")
-            count = template.get("count", len(template.get("matches", [])))
-
-            with st.expander(f"{bauteil} ({count}x erkannt)"):
-                st.json(template.get("matches", []))
-
-        # --- Visualisierung der Treffer ---
-        st.header("📜 Treffer auf Gesamtplan")
-        df = pd.DataFrame([
-            {"x": m["position"]["x"], "y": m["position"]["y"], "bauteil": template["bauteil"]}
-            for template in sample_json for m in template["matches"]
-        ])
-
-        fig = px.imshow(image_pil, binary_format="jpg")
-        fig.update_layout(title="🔍 Treffer auf dem Gesamtplan", width=1200, height=800)
-        fig.add_scatter(
-            x=df["x"], y=df["y"], mode="markers", marker=dict(size=10, color="red"),
-            text=df["bauteil"], name="Treffer"
-        )
-        fig.update_yaxes(autorange="reversed")
-        st.plotly_chart(fig, use_container_width=True)
-else:
+    else:
+        st.warning("⚠️ Bitte zwei Punkte setzen: Oben links und unten rechts.")
     st.info("⬆️ Bitte lade zunächst eine PDF-Datei hoch.")
 
 
