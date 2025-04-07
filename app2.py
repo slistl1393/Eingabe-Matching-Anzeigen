@@ -42,7 +42,7 @@ import io
 import base64
 import pandas as pd
 import plotly.express as px
-from streamlit_image_coordinates import image_coordinates
+import streamlit_image_coordinates
 
 st.set_page_config(page_title="PDF-Bauteilerkennung", layout="wide")
 st.title("📀 PDF-Plan hochladen, Template ausschneiden und auswerten")
@@ -76,7 +76,7 @@ if uploaded_pdf:
 
     # --- Bild anzeigen und Koordinaten auswählen ---
     st.subheader(f"🖼️ Vorschau – Seite {page_num} (DPI: {dpi})")
-    coords = image_coordinates(image_pil, key="template_coords")
+    coords = streamlit_image_coordinates.streamlit_image_coordinates(image_pil, key="template_coords")
 
     # --- Plan als PNG speichern ---
     buffered = io.BytesIO()
