@@ -36,7 +36,7 @@ if uploaded_pdf:
     page_num = st.number_input("Seitenzahl wählen", min_value=1, max_value=num_pages, value=1)
 
     # --- PDF -> Image ---
-    image_pil = convert_pdf_page_to_image(raw_pdf, dpi=dpi, page_number=page_num - 1).convert("RGB")
+    image_pil = convert_pdf_page_to_image(pdf_bytes, dpi=dpi, page_number=page_num - 1).convert("RGB")
 
     # --- Bild in base64-URL für Canvas konvertieren ---
     buffered = io.BytesIO()
@@ -68,25 +68,6 @@ if uploaded_pdf:
         width=image_pil.width,
         drawing_mode="rect",
         key="canvas"
-    )
-        stroke_width=3,
-        stroke_color="#000",
-        background_image=image_pil,
-        update_streamlit=True,
-        height=image_pil.height,
-        width=image_pil.width,
-        drawing_mode="rect",
-        key="canvas",
-        drawing_mode_display=True
-    )",
-        stroke_width=3,
-        stroke_color="#000",
-        background_image=image_pil,
-        update_streamlit=True,
-        height=image_pil.height,
-        width=image_pil.width,
-        drawing_mode="rect",
-        key="canvas",
     )
 
     if canvas_result.json_data and canvas_result.json_data.get("objects"):
