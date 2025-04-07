@@ -19,34 +19,42 @@ if uploaded_pdf:
     pdf_bytes = uploaded_pdf.read()
     image_full = convert_pdf_to_image(pdf_bytes).convert("RGB")
 
-    zoom = 2
-    preview = image_full.resize((image_full.width * zoom, image_full.height * zoom))
+    # Vorschau skalieren (max. 1000 px Breite)
+    max_preview_width = 1000
+    scale = max_preview_width / image_full.width
+    preview = image_full.resize(
+        (int(image_full.width * scale), int(image_full.height * scale))
+    )
 
-    st.subheader("🖼️ Vorschau – klicke zwei Punkte")
+    st.subheader("🖼️ Vorschau – bitte zwei Punkte setzen")
     coords = streamlit_image_coordinates.streamlit_image_coordinates(preview, key="clicks")
 
     if coords:
         st.write("📍 Gewählte Punkte:", coords)
 
     if coords and len(coords) >= 2:
-        st.success("✅ Zwei Punkte gesetzt")
+        st.success("✅ Zwei Punkte gesetzt – Ausschnitt wird erstellt")
 
+        # Rückskalierung der Koordinaten
         x1, y1 = coords[0]["x"], coords[0]["y"]
         x2, y2 = coords[1]["x"], coords[1]["y"]
-
-        left, top = int(min(x1, x2) / zoom), int(min(y1, y2) / zoom)
-        right, bottom = int(max(x1, x2) / zoom), int(max(y1, y2) / zoom)
+        left = int(min(x1, x2) / scale)
+        top = int(min(y1, y2) / scale)
+        right = int(max(x1, x2) / scale)
+        bottom = int(max(y1, y2) / scale)
 
         cropped = image_full.crop((left, top, right, bottom))
-        st.image(cropped, caption="Ausschnitt", use_container_width=True)
+        st.image(cropped, caption="📦 Ausgeschnittener Bereich", use_container_width=True)
 
+        # Template speichern
         buf = io.BytesIO()
         cropped.save(buf, format="PNG")
         st.download_button("💾 Template speichern", buf.getvalue(), "template.png", mime="image/png")
     elif coords:
-        st.info("🧭 Bitte zwei Punkte setzen (oben links & unten rechts).")
+        st.info("ℹ️ Bitte zwei Punkte setzen: oben links & unten rechts.")
 else:
-    st.info("⬆️ Lade eine PDF-Datei hoch.")
+    st.info("⬆️ Lade eine PDF-Datei hoch, um zu starten.")
+
 
 
 
