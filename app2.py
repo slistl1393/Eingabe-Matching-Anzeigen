@@ -1,77 +1,72 @@
 import streamlit as st
-import fitz
-from PIL import Image, ImageDraw
+import fitz  # PyMuPDF
+from PIL import Image
 import io
-import streamlit_image_coordinates
+import numpy as np
+import plotly.express as px
 
-import streamlit as st
-import fitz
-from PIL import Image, ImageDraw
-import io
-import streamlit_image_coordinates
+st.set_page_config(page_title="PDF-Template Ausschneider", layout="wide")
+st.title("📐 Template aus PDF ausschneiden – mit Zoom & Weiterverarbeitung")
 
-st.set_page_config(page_title="PDF-Plan ausschneiden", layout="wide")
-st.title("📐 PDF-Plan ausschneiden mit Klick")
-
-# --- PDF -> Bild ---
-def convert_pdf_to_image(pdf_bytes, dpi=150):
-    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-    page = doc.load_page(0)
-    mat = fitz.Matrix(dpi / 72, dpi / 72)
-    pix = page.get_pixmap(matrix=mat)
-    return Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-
-# --- Upload ---
+# --- PDF Upload ---
 uploaded_pdf = st.file_uploader("📄 PDF hochladen", type=["pdf"])
 if uploaded_pdf:
     pdf_bytes = uploaded_pdf.read()
-    image = convert_pdf_to_image(pdf_bytes).convert("RGB")
 
-    # Vorschau skalieren (z. B. 1200px Breite – Qualität zweitrangig)
-    preview_width = 1200
-    scale = preview_width / image.width
+    # --- PDF -> Bild (300 DPI) ---
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    page = doc.load_page(0)
+    mat = fitz.Matrix(300 / 72, 300 / 72)
+    pix = page.get_pixmap(matrix=mat)
+    image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+    original_image = image.copy()
+
+    # --- Vorschau erzeugen ---
+    max_width = 1000
+    scale = max_width / image.width
     preview = image.resize((int(image.width * scale), int(image.height * scale)))
+    preview_array = np.array(preview)
 
-    st.subheader("🖱️ Klicke zwei Punkte in der Vorschau")
-    coords = streamlit_image_coordinates.streamlit_image_coordinates(preview, key="clicks")
+    st.subheader("🖱️ Vorschau – nutze die Eingabe unten für den Ausschnitt")
+    fig = px.imshow(preview_array)
+    fig.update_layout(
+        height=int(preview.height * 1.1),
+        width=int(preview.width * 1.1),
+        margin=dict(l=10, r=10, t=30, b=10),
+    )
+    fig.update_yaxes(scaleanchor="x", scaleratio=1)
+    st.plotly_chart(fig, use_container_width=False)
 
-    if coords:
-        # Punkte markieren
-        img_copy = preview.copy()
-        draw = ImageDraw.Draw(img_copy)
-        for p in coords:
-            x = p["x"]
-            y = p["y"]
-            draw.ellipse((x - 5, y - 5, x + 5, y + 5), fill="red", outline="white", width=2)
-        st.image(img_copy, caption="📍 Geklickte Punkte", use_container_width=True)
-    else:
-        st.image(preview, caption="🖼️ Vorschau", use_container_width=True)
+    # --- Manuelle Eingabe der Punkte (für volle Kontrolle) ---
+    st.subheader("✂️ Bereich eingeben (in Vorschau-Koordinaten)")
+    col1, col2 = st.columns(2)
+    with col1:
+        x1 = st.number_input("🔹 x1", min_value=0, max_value=preview.width, value=100)
+        y1 = st.number_input("🔹 y1", min_value=0, max_value=preview.height, value=100)
+    with col2:
+        x2 = st.number_input("🔸 x2", min_value=0, max_value=preview.width, value=300)
+        y2 = st.number_input("🔸 y2", min_value=0, max_value=preview.height, value=300)
 
-    if coords and len(coords) >= 2:
-        st.success("✅ Zwei Punkte gesetzt – Ausschnitt wird erstellt")
-
-        x1 = coords[0]["x"]
-        y1 = coords[0]["y"]
-        x2 = coords[1]["x"]
-        y2 = coords[1]["y"]
-
+    # --- Button: Ausschneiden & Weiterverarbeiten ---
+    if st.button("💾 Ausschneiden & weiterverarbeiten"):
         left = int(min(x1, x2) / scale)
         top = int(min(y1, y2) / scale)
         right = int(max(x1, x2) / scale)
         bottom = int(max(y1, y2) / scale)
 
-        cropped = image.crop((left, top, right, bottom))
-        st.subheader("📦 Ausgeschnittener Bereich")
-        st.image(cropped, caption="Dein Ausschnitt", use_container_width=True)
+        cropped = original_image.crop((left, top, right, bottom))
+        st.image(cropped, caption="📦 Ausgeschnittener Bereich", use_container_width=True)
 
         # Download
         buf = io.BytesIO()
         cropped.save(buf, format="PNG")
-        st.download_button("💾 Template speichern", buf.getvalue(), "template.png", mime="image/png")
-    elif coords:
-        st.info("ℹ️ Bitte zwei Punkte setzen.")
+        st.download_button("⬇️ Template herunterladen", data=buf.getvalue(), file_name="template.png", mime="image/png")
+
+        # Weiterverarbeitung vorbereiten (hier Platzhalter)
+        st.info("🔄 Weiterverarbeitung wäre hier möglich – z. B. Upload oder Matching.")
 else:
-    st.info("⬆️ Lade eine PDF-Datei hoch.")
+    st.info("⬆️ Bitte lade eine PDF hoch, um zu starten.")
+
 
 
 
