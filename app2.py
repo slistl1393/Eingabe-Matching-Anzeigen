@@ -25,17 +25,24 @@ if uploaded_pdf:
     st.subheader("🖱️ Ziehe ein Rechteck über den gewünschten Bereich:")
 
     # --- Canvas für Rechteckauswahl ---
+    # Bild als PNG vorbereiten
+    img_buf = io.BytesIO()
+    image.save(img_buf, format="PNG")
+    img_buf.seek(0)
+    background_image = Image.open(img_buf)
+
     canvas_result = st_canvas(
         fill_color="rgba(255, 0, 0, 0.3)",
         stroke_width=3,
         stroke_color="#FF0000",
-        background_image=image,
+        background_image=background_image,
         update_streamlit=True,
         height=image.height,
         width=image.width,
         drawing_mode="rect",
         key="canvas"
     )
+
 
     # --- Rechteck ausgewählt?
     if canvas_result.json_data and canvas_result.json_data["objects"]:
