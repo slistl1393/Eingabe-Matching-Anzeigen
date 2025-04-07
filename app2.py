@@ -22,10 +22,9 @@ if uploaded_pdf:
     original_image = image.copy()
 
     # --- Vorschau erzeugen ---
-    max_width = 1000
-    scale = max_width / image.width
-    preview = image.resize((int(image.width * scale), int(image.height * scale)))
-    preview_array = np.array(preview)
+    preview_array = np.array(image)  # keine Verkleinerung
+    scale = 1  # wichtig: scale bleibt 1, weil Originalgröße
+
 
     st.subheader("🖱️ Vorschau – nutze die Eingabe unten für den Ausschnitt")
     fig = px.imshow(preview_array)
