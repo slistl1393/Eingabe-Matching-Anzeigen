@@ -4,6 +4,12 @@ from PIL import Image, ImageDraw
 import io
 import streamlit_image_coordinates
 
+import streamlit as st
+import fitz
+from PIL import Image, ImageDraw
+import io
+import streamlit_image_coordinates
+
 st.set_page_config(page_title="PDF-Plan ausschneiden", layout="wide")
 st.title("📐 PDF-Plan ausschneiden mit Klick")
 
@@ -34,8 +40,8 @@ if uploaded_pdf:
         img_copy = preview.copy()
         draw = ImageDraw.Draw(img_copy)
         for p in coords:
-            x = p["x"] if isinstance(p, dict) else p.x
-            y = p["y"] if isinstance(p, dict) else p.y
+            x = p["x"]
+            y = p["y"]
             draw.ellipse((x - 5, y - 5, x + 5, y + 5), fill="red", outline="white", width=2)
         st.image(img_copy, caption="📍 Geklickte Punkte", use_container_width=True)
     else:
@@ -44,10 +50,10 @@ if uploaded_pdf:
     if coords and len(coords) >= 2:
         st.success("✅ Zwei Punkte gesetzt – Ausschnitt wird erstellt")
 
-        x1 = coords[0]["x"] if isinstance(coords[0], dict) else coords[0].x
-        y1 = coords[0]["y"] if isinstance(coords[0], dict) else coords[0].y
-        x2 = coords[1]["x"] if isinstance(coords[1], dict) else coords[1].x
-        y2 = coords[1]["y"] if isinstance(coords[1], dict) else coords[1].y
+        x1 = coords[0]["x"]
+        y1 = coords[0]["y"]
+        x2 = coords[1]["x"]
+        y2 = coords[1]["y"]
 
         left = int(min(x1, x2) / scale)
         top = int(min(y1, y2) / scale)
@@ -66,7 +72,6 @@ if uploaded_pdf:
         st.info("ℹ️ Bitte zwei Punkte setzen.")
 else:
     st.info("⬆️ Lade eine PDF-Datei hoch.")
-
 
 
 
