@@ -42,7 +42,11 @@ if uploaded_pdf:
 
     # --- Bild anzeigen und Koordinaten auswählen ---
     st.subheader(f"🖼️ Vorschau – Seite {page_num} (DPI: {dpi})")
-    coords = streamlit_image_coordinates.streamlit_image_coordinates(image_pil, key="template_coords")
+    coords = streamlit_image_coordinates.streamlit_image_coordinates(
+        image_pil,
+        key="template_coords",
+        width=image_pil.width * 2  # Vorschau doppelt so groß anzeigen
+    )
 
     if coords:
         st.write("📍 Gewählte Koordinaten:", coords)
@@ -60,7 +64,7 @@ if uploaded_pdf:
     )
 
     # --- Template ausschneiden nach 2 Klicks ---
-    if coords and len(coords) >= 2:
+    if coords is not None and len(coords) >= 2:
         st.success("✅ Zwei Punkte gesetzt, Ausschnitt wird erstellt.")
         x1, y1 = coords[0]["x"], coords[0]["y"]
         x2, y2 = coords[1]["x"], coords[1]["y"]
@@ -93,8 +97,8 @@ if uploaded_pdf:
             # Beispiel (nur angedeutet, echte URL/API-Key etc. nötig):
             # response = requests.post("https://mein-backend.de/match", files={"template": buf, "plan": ...})
             # result = response.json()
-    else:
-        st.warning("⚠️ Bitte zwei Punkte setzen: Oben links und unten rechts.")
+    elif coords is not None:
+        st.info("ℹ️ Bitte setze zwei Punkte in der Vorschau: Oben links und unten rechts.")
     st.info("⬆️ Bitte lade zunächst eine PDF-Datei hoch.")
 
 
