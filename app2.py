@@ -36,7 +36,7 @@ if uploaded_pdf:
     page_num = st.number_input("Seitenzahl wählen", min_value=1, max_value=num_pages, value=1)
 
     # --- PDF -> Image ---
-    image_pil = convert_pdf_page_to_image(pdf_bytes, dpi=dpi, page_number=page_num - 1).convert("RGB")
+    image_pil = convert_pdf_page_to_image(raw_pdf, dpi=dpi, page_number=page_num - 1).convert("RGB")
 
     # --- Bild in base64-URL für Canvas konvertieren ---
     buffered = io.BytesIO()
@@ -46,7 +46,7 @@ if uploaded_pdf:
     img_url = f"data:image/png;base64,{img_base64}"
 
     st.subheader(f"🖼️ Vorschau – Seite {page_num} (DPI: {dpi})")
-    st.image(image_pil, use_container_width=True)
+    st.image(image_pil, use_column_width=True)
 
     # --- Plan als PNG speichern ---
     st.download_button(
@@ -143,4 +143,5 @@ if uploaded_pdf:
         st.plotly_chart(fig, use_container_width=True)
 else:
     st.info("⬆️ Bitte lade zunächst eine PDF-Datei hoch.")
+
 
