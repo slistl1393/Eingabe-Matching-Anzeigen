@@ -34,21 +34,55 @@ if uploaded_pdf:
     doc = fitz.open(stream=raw_pdf, filetype="pdf")
     num_pages = len(doc)
     page_num = st.number_input("Seitenzahl wählen", min_value=1, max_value=num_pages, value=1)
+import streamlit as st
+import fitz  # PyMuPDF
+from PIL import Image
+import numpy as np
+import io
+import base64
+import pandas as pd
+import plotly.express as px
+from streamlit_image_coordinates import image_coordinates
+
+st.set_page_config(page_title="PDF-Bauteilerkennung", layout="wide")
+st.title("📀 PDF-Plan hochladen, Template ausschneiden und auswerten")
+
+# --- Hilfsfunktion zur PDF-Konvertierung ---
+def convert_pdf_page_to_image(pdf_bytes, dpi=150, page_number=0):
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    page = doc.load_page(page_number)
+    zoom = dpi / 72  # 72 ist PDF-Standard-DPI
+    mat = fitz.Matrix(zoom, zoom)
+    pix = page.get_pixmap(matrix=mat)
+    img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+    return img
+
+# --- PDF Upload ---
+uploaded_pdf = st.file_uploader("🗄️ Lade deinen Plan als PDF hoch", type=["pdf"])
+
+if uploaded_pdf:
+    st.subheader("⚙️ Einstellungen")
+    dpi = st.slider("Wähle die DPI für die PDF-Konvertierung", min_value=100, max_value=400, value=300, step=50)
+
+    # PDF einmal lesen und als Bytes puffern
+    raw_pdf = uploaded_pdf.read()
+    pdf_bytes = io.BytesIO(raw_pdf)
+    doc = fitz.open(stream=raw_pdf, filetype="pdf")
+    num_pages = len(doc)
+    page_num = st.number_input("Seitenzahl wählen", min_value=1, max_value=num_pages, value=1)
 
     # --- PDF -> Image ---
     image_pil = convert_pdf_page_to_image(pdf_bytes, dpi=dpi, page_number=page_num - 1).convert("RGB")
 
-    # --- Bild in base64-URL für Canvas konvertieren ---
+    # --- Bild anzeigen und Koordinaten auswählen ---
+    st.subheader(f"🖼️ Vorschau – Seite {page_num} (DPI: {dpi})")
+    coords = image_coordinates(image_pil, key="template_coords")
+
+    # --- Plan als PNG speichern ---
     buffered = io.BytesIO()
     image_pil.save(buffered, format="PNG")
     img_bytes = buffered.getvalue()
-    img_base64 = base64.b64encode(img_bytes).decode()
-    img_url = f"data:image/png;base64,{img_base64}"
 
-    st.subheader(f"🖼️ Vorschau – Seite {page_num} (DPI: {dpi})")
-    st.image(image_pil, use_column_width=True)
-
-    # --- Plan als PNG speichern ---
     st.download_button(
         label="💾 Gesamtplan als PNG speichern",
         data=img_bytes,
@@ -56,34 +90,17 @@ if uploaded_pdf:
         mime="image/png"
     )
 
-    # --- Template Auswahl per Canvas ---
-    st.subheader("✂️ Ziehe ein Rechteck über den gewünschten Template-Bereich")
-    canvas_result = st_canvas(
-        fill_color="rgba(255, 0, 0, 0.3)",
-        stroke_width=2,
-        stroke_color="#000",
-        background_image=image_pil,
-        update_streamlit=True,
-        drawing_mode="rect",
-        key="canvas",
-        height=image_pil.height,
-        width=image_pil.width,
-        display_toolbar=True
-    )
+    # --- Template ausschneiden nach 2 Klicks ---
+    if coords and len(coords) >= 2:
+        x1, y1 = coords[0]["x"], coords[0]["y"]
+        x2, y2 = coords[1]["x"], coords[1]["y"]
+        left, top = min(x1, x2), min(y1, y2)
+        right, bottom = max(x1, x2), max(y1, y2)
 
-    if canvas_result.json_data and canvas_result.json_data.get("objects"):
-        obj = canvas_result.json_data["objects"][0]
-        left = int(obj["left"])
-        top = int(obj["top"])
-        width = int(obj["width"])
-        height = int(obj["height"])
-
-        # --- Ausschnitt extrahieren ---
-        cropped = image_pil.crop((left, top, left + width, top + height))
+        cropped = image_pil.crop((left, top, right, bottom))
         st.subheader("📦 Ausgeschnittenes Template")
         st.image(cropped, caption="Dein Template-Ausschnitt", use_container_width=True)
 
-        # --- Template als PNG speichern ---
         buf = io.BytesIO()
         cropped.save(buf, format="PNG")
         byte_im = buf.getvalue()
@@ -144,8 +161,6 @@ if uploaded_pdf:
         st.plotly_chart(fig, use_container_width=True)
 else:
     st.info("⬆️ Bitte lade zunächst eine PDF-Datei hoch.")
-
-
 
 
 
