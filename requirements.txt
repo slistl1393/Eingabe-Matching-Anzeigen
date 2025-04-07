@@ -5,4 +5,4 @@ numpy
 plotly
 pandas
 streamlit-drawable-canvas>=0.9.3
-
+streamlit-image-coordinates
