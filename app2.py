@@ -36,11 +36,13 @@ if uploaded_pdf:
     page_num = st.number_input("Seitenzahl wählen", min_value=1, max_value=num_pages, value=1)
 
     # --- PDF -> Image ---
-    image_pil = convert_pdf_page_to_image(pdf_bytes, dpi=dpi, page_number=page_num - 1).convert("RGB")
+    image_pil_full = convert_pdf_page_to_image(pdf_bytes, dpi=dpi, page_number=page_num - 1).convert("RGB")
+    image_pil = image_pil_full.copy()
+    image_pil.thumbnail((900, 700))
 
     # --- Bild anzeigen und Koordinaten auswählen ---
     st.subheader(f"🖼️ Vorschau – Seite {page_num} (DPI: {dpi})")
-    coords = streamlit_image_coordinates.streamlit_image_coordinates(image_pil, key="template_coords")
+    coords = streamlit_image_coordinates.streamlit_image_coordinates(image_pil, key="template_coords", display_coordinates=True)
 
     # --- Plan als PNG speichern ---
     buffered = io.BytesIO()
@@ -61,7 +63,7 @@ if uploaded_pdf:
         left, top = min(x1, x2), min(y1, y2)
         right, bottom = max(x1, x2), max(y1, y2)
 
-        cropped = image_pil.crop((left, top, right, bottom))
+        cropped = image_pil_full.crop((left, top, right, bottom))
         st.subheader("📦 Ausgeschnittenes Template")
         st.image(cropped, caption="Dein Template-Ausschnitt", use_container_width=True)
 
@@ -125,6 +127,7 @@ if uploaded_pdf:
         st.plotly_chart(fig, use_container_width=True)
 else:
     st.info("⬆️ Bitte lade zunächst eine PDF-Datei hoch.")
+
 
 
 
