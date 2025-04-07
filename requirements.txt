@@ -1,7 +1,8 @@
 streamlit
 pymupdf
 Pillow
-streamlit-drawable-canvas
+numpy
+plotly
 
 
 
