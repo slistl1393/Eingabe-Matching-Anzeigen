@@ -61,8 +61,7 @@ if uploaded_pdf:
         fill_color="rgba(255, 0, 0, 0.3)",
         stroke_width=3,
         stroke_color="#000",
-        background_image=None,
-        background_image_url=img_url,
+        background_image=Image.open(io.BytesIO(img_bytes)),
         update_streamlit=True,
         height=image_pil.height,
         width=image_pil.width,
@@ -143,4 +142,5 @@ if uploaded_pdf:
         st.plotly_chart(fig, use_container_width=True)
 else:
     st.info("⬆️ Bitte lade zunächst eine PDF-Datei hoch.")
+
 
