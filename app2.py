@@ -42,7 +42,10 @@ if uploaded_pdf:
 
     # --- Bild anzeigen und Koordinaten auswählen ---
     st.subheader(f"🖼️ Vorschau – Seite {page_num} (DPI: {dpi})")
-    coords = streamlit_image_coordinates.streamlit_image_coordinates(image_pil, key="template_coords", display_coordinates=True)
+    coords = streamlit_image_coordinates.streamlit_image_coordinates(image_pil, key="template_coords")
+
+    if coords:
+        st.write("📍 Gewählte Koordinaten:", coords)
 
     # --- Plan als PNG speichern ---
     buffered = io.BytesIO()
