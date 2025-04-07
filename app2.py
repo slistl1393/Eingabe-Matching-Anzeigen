@@ -36,8 +36,9 @@ if uploaded_pdf:
     preview_array = np.array(image)
     fig = px.imshow(preview_array, binary_format='png')
     fig.update_layout(
-        dragmode="zoom",
-        margin=dict(l=10, r=10, t=30, b=10),
+    dragmode="zoom",
+    height=700,  # oder was für dich passt
+    margin=dict(l=10, r=10, t=30, b=10),
     )
     fig.update_yaxes(scaleanchor="x", scaleratio=1)
 
