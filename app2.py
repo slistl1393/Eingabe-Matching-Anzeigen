@@ -60,14 +60,15 @@ if uploaded_pdf:
     st.subheader("✂️ Ziehe ein Rechteck über den gewünschten Template-Bereich")
     canvas_result = st_canvas(
         fill_color="rgba(255, 0, 0, 0.3)",
-        stroke_width=3,
+        stroke_width=2,
         stroke_color="#000",
         background_image=image_pil,
         update_streamlit=True,
+        drawing_mode="rect",
+        key="canvas",
         height=image_pil.height,
         width=image_pil.width,
-        drawing_mode="rect",
-        key="canvas"
+        display_toolbar=True
     )
 
     if canvas_result.json_data and canvas_result.json_data.get("objects"):
