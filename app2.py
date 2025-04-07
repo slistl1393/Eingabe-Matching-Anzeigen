@@ -39,7 +39,7 @@ if uploaded_pdf:
     image_pil_full = convert_pdf_page_to_image(pdf_bytes, dpi=dpi, page_number=page_num - 1).convert("RGB")
 
     # --- Vorschaubild vorbereiten ---
-    zoom_factor = 2  # Vorschau wird 2x größer dargestellt
+    zoom_factor = 1  # Vorschau wird 2x größer dargestellt
     image_pil = image_pil_full.resize(
         (image_pil_full.width * zoom_factor, image_pil_full.height * zoom_factor)
     )
