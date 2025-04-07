@@ -22,7 +22,7 @@ if uploaded_pdf:
     image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
     original_image = image.copy()
 
-        st.subheader("🔍 Zoombare Vorschau des Plans")
+    st.subheader("🔍 Zoombare Vorschau des Plans")
 
     preview_array = np.array(image)
 
