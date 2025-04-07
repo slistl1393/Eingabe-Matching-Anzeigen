@@ -22,11 +22,18 @@ if uploaded_pdf:
     image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
     original_image = image.copy()
 
-    st.subheader("🔍 Zoombare Vorschau des Plans")
+    st.subheader("✂️ Bereich auswählen – Koordinaten eingeben")
+    col1, col2 = st.columns(2)
+    with col1:
+        x1 = st.number_input("🔹 x1", min_value=0, max_value=image.width, value=100)
+        y1 = st.number_input("🔹 y1", min_value=0, max_value=image.height, value=100)
+    with col2:
+        x2 = st.number_input("🔸 x2", min_value=0, max_value=image.width, value=300)
+        y2 = st.number_input("🔸 y2", min_value=0, max_value=image.height, value=300)
 
+    # --- Vorschau mit Markern ---
+    st.subheader("🔍 Zoombare Vorschau des Plans mit Auswahlpunkten")
     preview_array = np.array(image)
-
-    # --- Plotly mit Punktmarkern ---
     fig = px.imshow(preview_array)
     fig.update_layout(
         dragmode="zoom",
@@ -34,8 +41,8 @@ if uploaded_pdf:
     )
     fig.update_yaxes(scaleanchor="x", scaleratio=1)
 
-    # Punkte hinzufügen, wenn gesetzt
-    if x1 != x2 and y1 != y2:
+    # Marker anzeigen, wenn Koordinaten gesetzt
+    if (x1 != x2) and (y1 != y2):
         fig.add_scatter(
             x=[x1, x2],
             y=[y1, y2],
@@ -45,17 +52,6 @@ if uploaded_pdf:
         )
 
     st.plotly_chart(fig, use_container_width=True)
-
-
-    # --- Koordinaten-Eingabe (Slider oder Zahleneingabe) ---
-    st.subheader("✂️ Bereich auswählen – Koordinaten eingeben")
-    col1, col2 = st.columns(2)
-    with col1:
-        x1 = st.number_input("🔹 x1", min_value=0, max_value=image.width, value=100)
-        y1 = st.number_input("🔹 y1", min_value=0, max_value=image.height, value=100)
-    with col2:
-        x2 = st.number_input("🔸 x2", min_value=0, max_value=image.width, value=300)
-        y2 = st.number_input("🔸 y2", min_value=0, max_value=image.height, value=300)
 
     # --- Ausschneiden & Weiterverarbeitung ---
     if st.button("💾 Ausschneiden & weiterverarbeiten"):
@@ -75,6 +71,7 @@ if uploaded_pdf:
         st.success("✅ Ausschneiden erfolgreich. Jetzt bereit für weitere Schritte.")
 else:
     st.info("⬆️ Bitte lade eine PDF hoch, um zu starten.")
+
 
 
 
