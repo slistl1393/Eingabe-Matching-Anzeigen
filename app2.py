@@ -6,42 +6,6 @@ import io
 import base64
 import pandas as pd
 import plotly.express as px
-from streamlit_drawable_canvas import st_canvas
-
-st.set_page_config(page_title="PDF-Bauteilerkennung", layout="wide")
-st.title("📀 PDF-Plan hochladen, Template ausschneiden und auswerten")
-
-# --- Hilfsfunktion zur PDF-Konvertierung ---
-def convert_pdf_page_to_image(pdf_bytes, dpi=150, page_number=0):
-    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-    page = doc.load_page(page_number)
-    zoom = dpi / 72  # 72 ist PDF-Standard-DPI
-    mat = fitz.Matrix(zoom, zoom)
-    pix = page.get_pixmap(matrix=mat)
-    img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-    return img
-
-# --- PDF Upload ---
-uploaded_pdf = st.file_uploader("🗄️ Lade deinen Plan als PDF hoch", type=["pdf"])
-
-if uploaded_pdf:
-    st.subheader("⚙️ Einstellungen")
-    dpi = st.slider("Wähle die DPI für die PDF-Konvertierung", min_value=100, max_value=400, value=300, step=50)
-
-    # PDF einmal lesen und als Bytes puffern
-    raw_pdf = uploaded_pdf.read()
-    pdf_bytes = io.BytesIO(raw_pdf)
-    doc = fitz.open(stream=raw_pdf, filetype="pdf")
-    num_pages = len(doc)
-    page_num = st.number_input("Seitenzahl wählen", min_value=1, max_value=num_pages, value=1)
-import streamlit as st
-import fitz  # PyMuPDF
-from PIL import Image
-import numpy as np
-import io
-import base64
-import pandas as pd
-import plotly.express as px
 import streamlit_image_coordinates
 
 st.set_page_config(page_title="PDF-Bauteilerkennung", layout="wide")
@@ -161,6 +125,7 @@ if uploaded_pdf:
         st.plotly_chart(fig, use_container_width=True)
 else:
     st.info("⬆️ Bitte lade zunächst eine PDF-Datei hoch.")
+
 
 
 
