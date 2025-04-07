@@ -28,14 +28,15 @@ if uploaded_pdf:
     st.subheader("⚙️ Einstellungen")
     dpi = st.slider("Wähle die DPI für die PDF-Konvertierung", min_value=100, max_value=400, value=300, step=50)
 
-    # PDF lesen
-    pdf_bytes = uploaded_pdf.read()
-    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    # PDF einmal lesen und als Bytes puffern
+    raw_pdf = uploaded_pdf.read()
+    pdf_bytes = io.BytesIO(raw_pdf)
+    doc = fitz.open(stream=raw_pdf, filetype="pdf")
     num_pages = len(doc)
     page_num = st.number_input("Seitenzahl wählen", min_value=1, max_value=num_pages, value=1)
 
     # --- PDF -> Image ---
-    image_pil = convert_pdf_page_to_image(pdf_bytes, dpi=dpi, page_number=page_num - 1).convert("RGB")
+    image_pil = convert_pdf_page_to_image(raw_pdf, dpi=dpi, page_number=page_num - 1).convert("RGB")
 
     # --- Bild in base64-URL für Canvas konvertieren ---
     buffered = io.BytesIO()
@@ -142,5 +143,4 @@ if uploaded_pdf:
         st.plotly_chart(fig, use_container_width=True)
 else:
     st.info("⬆️ Bitte lade zunächst eine PDF-Datei hoch.")
-
 
