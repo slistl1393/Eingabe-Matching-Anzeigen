@@ -45,7 +45,7 @@ if uploaded_pdf:
     img_url = f"data:image/png;base64,{img_base64}"
 
     st.subheader(f"🖼️ Vorschau – Seite {page_num} (DPI: {dpi})")
-    st.image(image_pil, use_column_width=True)
+    st.image(image_pil, use_container_width=True)
 
     # --- Plan als PNG speichern ---
     st.download_button(
@@ -80,7 +80,7 @@ if uploaded_pdf:
         # --- Ausschnitt extrahieren ---
         cropped = image_pil.crop((left, top, left + width, top + height))
         st.subheader("📦 Ausgeschnittenes Template")
-        st.image(cropped, caption="Dein Template-Ausschnitt", use_column_width=False)
+        st.image(cropped, caption="Dein Template-Ausschnitt", use_container_width=True)
 
         # --- Template als PNG speichern ---
         buf = io.BytesIO()
@@ -143,5 +143,4 @@ if uploaded_pdf:
         st.plotly_chart(fig, use_container_width=True)
 else:
     st.info("⬆️ Bitte lade zunächst eine PDF-Datei hoch.")
-
 
