@@ -1,75 +1,213 @@
 import streamlit as st
+ 
 import fitz  # PyMuPDF
+ 
 from PIL import Image
+ 
 import io
-from streamlit_drawable_canvas import st_canvas
+ 
+import numpy as np
+ 
+import plotly.express as px
+ 
 
-st.set_page_config(page_title="📐 PDF Template Ausschneiden", layout="wide")
-st.title("📐 Template per Rechteck ausschneiden – ohne Stress")
+ 
+st.set_page_config(page_title="PDF-Template Ausschneider", layout="wide")
+ 
+st.title("📐 Template aus PDF ausschneiden – mit Zoom & Weiterverarbeitung")
+ 
 
+ 
 # --- PDF Upload ---
+ 
 uploaded_pdf = st.file_uploader("📄 PDF hochladen", type=["pdf"])
+ 
 if uploaded_pdf:
+ 
     pdf_bytes = uploaded_pdf.read()
+ 
 
-    # --- PDF → Bild (200 DPI) ---
+ 
+    # --- PDF -> Bild (300 DPI) ---
+ 
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+ 
     page = doc.load_page(0)
-    mat = fitz.Matrix(200 / 72, 200 / 72)
+ 
+    mat = fitz.Matrix(300 / 72, 300 / 72)
+ 
     pix = page.get_pixmap(matrix=mat)
+ 
     image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+ 
     original_image = image.copy()
+ 
 
-    # --- Bild für Canvas vorbereiten (Fehlervermeidung!) ---
-    buf = io.BytesIO()
-    image.save(buf, format="PNG")
-    buf.seek(0)
-    canvas_image = Image.open(buf)
-    canvas_image.format = "PNG"  # 🔧 WICHTIG: Ohne das stürzt es ab!
+ 
 
-    st.subheader("🖱️ Ziehe ein Rechteck auf dem Plan")
+    # --- Vorschau erzeugen ---
+ 
 
-    # --- Canvas starten ---
-    canvas_result = st_canvas(
-        fill_color="rgba(255, 0, 0, 0.3)",
-        stroke_width=3,
-        stroke_color="#FF0000",
-        background_image=canvas_image,
-        update_streamlit=True,
-        height=image.height,
-        width=image.width,
-        drawing_mode="rect",
-        key="canvas"
+    preview_array = np.array(image)  # keine Verkleinerung
+ 
+
+    scale = 1  # wichtig: scale bleibt 1, weil Originalgröße
+ 
+
+    st.subheader("🔍 Zoombare Vorschau des Plans (volle Auflösung)")
+ 
+
+    preview_array = np.array(image)  # kein Scaling
+ 
+
+    scale = 1  # wichtig: keine Umrechnung nötig
+ 
+
+ 
+
+
+ 
+
+    st.subheader("🖱️ Vorschau – nutze die Eingabe unten für den Ausschnitt")
+ 
+    fig = px.imshow(preview_array)
+ 
+    fig.update_layout(
+ 
+
+        height=int(preview.height * 1.1),
+ 
+
+        width=int(preview.width * 1.1),
+ 
+
+        dragmode="zoom",
+ 
+
+        height=int(image.height * 1.1),
+ 
+
+        width=int(image.width * 1.1),
+ 
+        margin=dict(l=10, r=10, t=30, b=10),
+ 
     )
+ 
+    fig.update_yaxes(scaleanchor="x", scaleratio=1)
+ 
+    st.plotly_chart(fig, use_container_width=False)
+ 
 
-    # --- Rechteck verarbeitet?
-    if canvas_result.json_data and canvas_result.json_data["objects"]:
-        obj = canvas_result.json_data["objects"][0]
-        left = int(obj["left"])
-        top = int(obj["top"])
-        width = int(obj["width"])
-        height = int(obj["height"])
+ 
 
-        right = left + width
-        bottom = top + height
+    # --- Manuelle Eingabe der Punkte (für volle Kontrolle) ---
+ 
 
-        # --- Ausschnitt
+    st.subheader("✂️ Bereich eingeben (in Vorschau-Koordinaten)")
+ 
+
+    # --- Koordinaten manuell eingeben ---
+ 
+
+    st.subheader("✂️ Bereich auswählen – Koordinaten eingeben")
+ 
+    col1, col2 = st.columns(2)
+ 
+    with col1:
+ 
+
+        x1 = st.number_input("🔹 x1", min_value=0, max_value=preview.width, value=100)
+ 
+
+        y1 = st.number_input("🔹 y1", min_value=0, max_value=preview.height, value=100)
+ 
+
+        x1 = st.number_input("🔹 x1", min_value=0, max_value=image.width, value=100)
+ 
+
+        y1 = st.number_input("🔹 y1", min_value=0, max_value=image.height, value=100)
+ 
+    with col2:
+ 
+
+        x2 = st.number_input("🔸 x2", min_value=0, max_value=preview.width, value=300)
+ 
+
+        y2 = st.number_input("🔸 y2", min_value=0, max_value=preview.height, value=300)
+ 
+
+        x2 = st.number_input("🔸 x2", min_value=0, max_value=image.width, value=300)
+ 
+
+        y2 = st.number_input("🔸 y2", min_value=0, max_value=image.height, value=300)
+ 
+
+ 
+
+    # --- Button: Ausschneiden & Weiterverarbeiten ---
+ 
+
+    # --- Ausschneiden & Weiterverarbeitung ---
+ 
+    if st.button("💾 Ausschneiden & weiterverarbeiten"):
+ 
+
+        left = int(min(x1, x2) / scale)
+ 
+
+        top = int(min(y1, y2) / scale)
+ 
+
+        right = int(max(x1, x2) / scale)
+ 
+
+        bottom = int(max(y1, y2) / scale)
+ 
+
+        left = int(min(x1, x2))
+ 
+
+        top = int(min(y1, y2))
+ 
+
+        right = int(max(x1, x2))
+ 
+
+        bottom = int(max(y1, y2))
+ 
+
+ 
         cropped = original_image.crop((left, top, right, bottom))
-        st.subheader("📦 Dein ausgeschnittener Bereich")
-        st.image(cropped, use_container_width=True)
+ 
+        st.image(cropped, caption="📦 Ausgeschnittener Bereich", use_container_width=True)
+ 
 
-        # --- Download
-        out_buf = io.BytesIO()
-        cropped.save(out_buf, format="PNG")
-        st.download_button("💾 Template herunterladen", out_buf.getvalue(), "template.png", mime="image/png")
+ 
+        # Download
+ 
+        buf = io.BytesIO()
+ 
+        cropped.save(buf, format="PNG")
+ 
+        st.download_button("⬇️ Template herunterladen", data=buf.getvalue(), file_name="template.png", mime="image/png")
+ 
 
-        # --- Platz für Weiterverarbeitung
-        st.success("✅ Ausschneiden erfolgreich. Jetzt bereit für weitere Schritte.")
-    else:
-        st.info("ℹ️ Bitte ziehe ein Rechteck auf dem Plan.")
+ 
+
+        # Weiterverarbeitung vorbereiten (hier Platzhalter)
+ 
+
+        st.info("🔄 Weiterverarbeitung wäre hier möglich – z. B. Upload oder Matching.")
+ 
+
+        # Platzhalter für Weiterverarbeitung
+ 
+
+        st.info("🔄 Weiterverarbeitung wäre hier möglich (z. B. Matching, GitHub-Upload).")
+ 
 else:
-    st.info("⬆️ Lade eine PDF-Datei hoch, um zu starten.")
-
+ 
+    st.info("⬆️ Bitte lade eine PDF hoch, um zu starten.")
 
 
 
