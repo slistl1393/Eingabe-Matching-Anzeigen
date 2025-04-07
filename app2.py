@@ -1,69 +1,68 @@
 import streamlit as st
 import fitz  # PyMuPDF
+import streamlit as st
+import fitz  # PyMuPDF
 from PIL import Image
 import io
-import numpy as np
-import plotly.express as px
+from streamlit_drawable_canvas import st_canvas
 
-st.set_page_config(page_title="PDF-Template Ausschneider", layout="wide")
-st.title("📐 Template aus PDF ausschneiden – mit Zoom & Weiterverarbeitung")
+st.set_page_config(page_title="PDF Template Ausschneiden", layout="wide")
+st.title("📐 Template per Maus auswählen und ausschneiden")
 
 # --- PDF Upload ---
 uploaded_pdf = st.file_uploader("📄 PDF hochladen", type=["pdf"])
 if uploaded_pdf:
     pdf_bytes = uploaded_pdf.read()
 
-    # --- PDF -> Bild (300 DPI) ---
+    # PDF -> Bild (200 DPI für Qualität & Performance)
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     page = doc.load_page(0)
-    mat = fitz.Matrix(300 / 72, 300 / 72)
+    mat = fitz.Matrix(200 / 72, 200 / 72)
     pix = page.get_pixmap(matrix=mat)
     image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
     original_image = image.copy()
 
-    st.subheader("🔍 Zoombare Vorschau des Plans (volle Auflösung)")
-    preview_array = np.array(image)  # kein Scaling
-    scale = 1  # wichtig: keine Umrechnung nötig
+    st.subheader("🖱️ Ziehe ein Rechteck über den gewünschten Bereich:")
 
-    fig = px.imshow(preview_array)
-    fig.update_layout(
-        dragmode="zoom",
-        height=int(image.height * 1.1),
-        width=int(image.width * 1.1),
-        margin=dict(l=10, r=10, t=30, b=10),
+    # --- Canvas für Rechteckauswahl ---
+    canvas_result = st_canvas(
+        fill_color="rgba(255, 0, 0, 0.3)",
+        stroke_width=3,
+        stroke_color="#FF0000",
+        background_image=image,
+        update_streamlit=True,
+        height=image.height,
+        width=image.width,
+        drawing_mode="rect",
+        key="canvas"
     )
-    fig.update_yaxes(scaleanchor="x", scaleratio=1)
-    st.plotly_chart(fig, use_container_width=False)
 
-    # --- Koordinaten manuell eingeben ---
-    st.subheader("✂️ Bereich auswählen – Koordinaten eingeben")
-    col1, col2 = st.columns(2)
-    with col1:
-        x1 = st.number_input("🔹 x1", min_value=0, max_value=image.width, value=100)
-        y1 = st.number_input("🔹 y1", min_value=0, max_value=image.height, value=100)
-    with col2:
-        x2 = st.number_input("🔸 x2", min_value=0, max_value=image.width, value=300)
-        y2 = st.number_input("🔸 y2", min_value=0, max_value=image.height, value=300)
+    # --- Rechteck ausgewählt?
+    if canvas_result.json_data and canvas_result.json_data["objects"]:
+        obj = canvas_result.json_data["objects"][0]
+        left = int(obj["left"])
+        top = int(obj["top"])
+        width = int(obj["width"])
+        height = int(obj["height"])
+        right = left + width
+        bottom = top + height
 
-    # --- Ausschneiden & Weiterverarbeitung ---
-    if st.button("💾 Ausschneiden & weiterverarbeiten"):
-        left = int(min(x1, x2))
-        top = int(min(y1, y2))
-        right = int(max(x1, x2))
-        bottom = int(max(y1, y2))
-
+        # --- Bildausschnitt erzeugen
         cropped = original_image.crop((left, top, right, bottom))
-        st.image(cropped, caption="📦 Ausgeschnittener Bereich", use_container_width=True)
+        st.subheader("📦 Ausgeschnittener Bereich")
+        st.image(cropped, caption="Dein Template", use_container_width=True)
 
-        # Download
+        # --- Download Button
         buf = io.BytesIO()
         cropped.save(buf, format="PNG")
-        st.download_button("⬇️ Template herunterladen", data=buf.getvalue(), file_name="template.png", mime="image/png")
+        st.download_button("💾 Template herunterladen", buf.getvalue(), "template.png", mime="image/png")
 
-        # Platzhalter für Weiterverarbeitung
-        st.info("🔄 Weiterverarbeitung wäre hier möglich (z. B. Matching, GitHub-Upload).")
+        # --- Weiterverarbeitung hier anschließen
+        st.success("✅ Ausschnitt erstellt. Bereit für Weiterverarbeitung.")
+    else:
+        st.info("ℹ️ Bitte ziehe ein Rechteck auf dem Plan.")
 else:
-    st.info("⬆️ Bitte lade eine PDF hoch, um zu starten.")
+    st.info("⬆️ Lade eine PDF-Datei hoch, um zu starten.")
 
 
 
