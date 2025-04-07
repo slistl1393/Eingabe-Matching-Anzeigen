@@ -1,71 +1,67 @@
 import streamlit as st
-import fitz  # PyMuPDF
+import fitz
 from PIL import Image, ImageDraw
 import io
 import streamlit_image_coordinates
+import plotly.express as px
+import numpy as np
 
-st.set_page_config(page_title="PDF-Ausschnitt mit Zoom & Klick", layout="wide")
-st.title("📐 PDF-Plan ausschneiden mit Zoom und Klickvorschau")
+st.set_page_config(page_title="Zoom & Klick Vorschau", layout="wide")
+st.title("📐 PDF-Plan ausschneiden mit Zoom + Koordinaten")
 
-# --- Hilfsfunktion zur PDF-Konvertierung ---
-def convert_pdf_to_image(pdf_bytes, dpi=200, page_number=0):
+# --- PDF zu Bild ---
+def convert_pdf_to_image(pdf_bytes, dpi=200):
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-    page = doc.load_page(page_number)
+    page = doc.load_page(0)
     mat = fitz.Matrix(dpi / 72, dpi / 72)
     pix = page.get_pixmap(matrix=mat)
     return Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
 
 # --- Upload ---
-uploaded_pdf = st.file_uploader("📄 Lade eine PDF-Datei hoch", type=["pdf"])
+uploaded_pdf = st.file_uploader("📄 PDF hochladen", type=["pdf"])
 if uploaded_pdf:
-    raw_pdf = uploaded_pdf.read()
-    image_full = convert_pdf_to_image(raw_pdf).convert("RGB")
+    pdf_bytes = uploaded_pdf.read()
+    image = convert_pdf_to_image(pdf_bytes).convert("RGB")
 
-    # --- Zoomfaktor wählbar ---
-    zoom_factor = st.slider("🔍 Zoomfaktor für Vorschau", min_value=1, max_value=4, value=2)
-    preview = image_full.resize(
-        (image_full.width * zoom_factor, image_full.height * zoom_factor)
-    )
+    # Vorschau mit Zoom (nur visuell)
+    st.subheader("🔍 Zoombare Vorschau")
+    fig = px.imshow(np.array(image))
+    fig.update_layout(height=800)
+    fig.update_yaxes(autorange="reversed")
+    st.plotly_chart(fig, use_container_width=True)
 
-    # --- Koordinaten auswählen ---
-    st.subheader("🖱️ Klicke zwei Punkte in der Vorschau (oben links & unten rechts)")
-    coords = streamlit_image_coordinates.streamlit_image_coordinates(preview, key="clicks")
+    # Vorschau zum Klicken
+    st.subheader("🖱️ Auswahl: Klicke zwei Punkte für Ausschnitt")
+    click_preview = image.resize((1000, int(1000 * image.height / image.width)))
+    coords = streamlit_image_coordinates.streamlit_image_coordinates(click_preview, key="clicks")
 
-    # --- Punkte visuell markieren ---
     if coords:
-        preview_with_points = preview.copy()
-        draw = ImageDraw.Draw(preview_with_points)
-        for point in coords:
-            x, y = point["x"], point["y"]
-            r = 6
-            draw.ellipse((x - r, y - r, x + r, y + r), fill="red", outline="white", width=2)
-        st.image(preview_with_points, caption="🖼️ Vorschau mit Punkten", use_container_width=True)
-    else:
-        st.image(preview, caption="🖼️ Vorschau", use_container_width=True)
+        # Punkte visuell zeigen
+        img_copy = click_preview.copy()
+        draw = ImageDraw.Draw(img_copy)
+        for p in coords:
+            draw.ellipse((p["x"]-5, p["y"]-5, p["x"]+5, p["y"]+5), fill="red", outline="white", width=2)
+        st.image(img_copy, caption="📍 Geklickte Punkte", use_container_width=True)
 
-    # --- Ausschneiden, wenn 2 Punkte gesetzt ---
     if coords and len(coords) >= 2:
-        st.success("✅ Zwei Punkte gesetzt – Bereich wird ausgeschnitten")
+        scale = image.width / click_preview.width
         x1, y1 = coords[0]["x"], coords[0]["y"]
         x2, y2 = coords[1]["x"], coords[1]["y"]
+        left, top = int(min(x1, x2) * scale), int(min(y1, y2) * scale)
+        right, bottom = int(max(x1, x2) * scale), int(max(y1, y2) * scale)
 
-        # Rückskalierung auf Originalgröße
-        left = int(min(x1, x2) / zoom_factor)
-        top = int(min(y1, y2) / zoom_factor)
-        right = int(max(x1, x2) / zoom_factor)
-        bottom = int(max(y1, y2) / zoom_factor)
-
-        cropped = image_full.crop((left, top, right, bottom))
-        st.image(cropped, caption="📦 Ausgeschnittener Bereich", use_container_width=True)
+        cropped = image.crop((left, top, right, bottom))
+        st.subheader("📦 Ausgeschnittener Bereich")
+        st.image(cropped, caption="Ausschnitt", use_container_width=True)
 
         # Download
         buf = io.BytesIO()
         cropped.save(buf, format="PNG")
-        st.download_button("💾 Template speichern", buf.getvalue(), "template.png", mime="image/png")
+        st.download_button("💾 Ausschnitt speichern", buf.getvalue(), "template.png", mime="image/png")
     elif coords:
-        st.info("ℹ️ Bitte noch einen zweiten Punkt setzen.")
+        st.info("⚠️ Bitte zwei Punkte setzen.")
 else:
-    st.info("⬆️ Lade eine PDF-Datei hoch, um zu starten.")
+    st.info("⬆️ Bitte lade eine PDF hoch.")
 
 
 
