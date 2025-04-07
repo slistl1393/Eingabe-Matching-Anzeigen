@@ -68,6 +68,16 @@ if uploaded_pdf:
         width=image_pil.width,
         drawing_mode="rect",
         key="canvas",
+        drawing_mode_display=True
+    )",
+        stroke_width=3,
+        stroke_color="#000",
+        background_image=image_pil,
+        update_streamlit=True,
+        height=image_pil.height,
+        width=image_pil.width,
+        drawing_mode="rect",
+        key="canvas",
     )
 
     if canvas_result.json_data and canvas_result.json_data.get("objects"):
