@@ -67,6 +67,15 @@ if uploaded_pdf:
         height=image_pil.height,
         width=image_pil.width,
         drawing_mode="rect",
+        key="canvas"
+    )
+        stroke_width=3,
+        stroke_color="#000",
+        background_image=image_pil,
+        update_streamlit=True,
+        height=image_pil.height,
+        width=image_pil.width,
+        drawing_mode="rect",
         key="canvas",
         drawing_mode_display=True
     )",
@@ -153,6 +162,7 @@ if uploaded_pdf:
         st.plotly_chart(fig, use_container_width=True)
 else:
     st.info("⬆️ Bitte lade zunächst eine PDF-Datei hoch.")
+
 
 
 
