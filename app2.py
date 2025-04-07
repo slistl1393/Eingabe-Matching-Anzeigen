@@ -63,43 +63,71 @@ if uploaded_pdf:
         mime="image/png"
     )
 
-    # --- Template ausschneiden nach 2 Klicks ---
-    if coords is not None and len(coords) >= 2:
-        st.success("✅ Zwei Punkte gesetzt, Ausschnitt wird erstellt.")
-        x1, y1 = coords[0]["x"], coords[0]["y"]
-        x2, y2 = coords[1]["x"], coords[1]["y"]
-        left, top = min(x1, x2), min(y1, y2)
-        right, bottom = max(x1, x2), max(y1, y2)
 
-        cropped = image_pil_full.crop((left, top, right, bottom))
-        st.subheader("📦 Ausgeschnittenes Template")
-        st.image(cropped, caption="Dein Template-Ausschnitt", use_container_width=True)
+# --- Bild vorbereiten: Vorschau skalieren für besseres Anklicken ---
+zoom_factor = 2  # Vorschau wird 2x so groß dargestellt
+image_pil = image_pil_full.resize(
+    (image_pil_full.width * zoom_factor, image_pil_full.height * zoom_factor)
+)
 
-        buf = io.BytesIO()
-        cropped.save(buf, format="PNG")
-        byte_im = buf.getvalue()
+# --- Bild anzeigen und Koordinaten auswählen ---
+st.subheader(f"🖼️ Vorschau – Seite {page_num} (DPI: {dpi})")
+coords = streamlit_image_coordinates.streamlit_image_coordinates(
+    image_pil,
+    key="template_coords"
+)
 
-        st.download_button(
-            label="💾 Template als PNG speichern",
-            data=byte_im,
-            file_name="template.png",
-            mime="image/png"
-        )
+if coords:
+    st.write("📍 Gewählte Koordinaten:", coords)
 
-        st.success("✅ Template erfolgreich ausgeschnitten!")
-        st.markdown("---")
+# --- Plan als PNG speichern ---
+buffered = io.BytesIO()
+image_pil.save(buffered, format="PNG")
+img_bytes = buffered.getvalue()
 
-        # --- Vorbereitung für Matching-Backend-Aufruf ---
-        st.info("🧠 Nächster Schritt: Template Matching via externem Backend")
+st.download_button(
+    label="💾 Gesamtplan als PNG speichern",
+    data=img_bytes,
+    file_name="plan.png",
+    mime="image/png"
+)
 
-        if st.button("🔄 Externes Matching starten"):
-            st.warning("🔹 Hier würde ein Request an das Backend erfolgen (z. B. via FastAPI).")
-            # Beispiel (nur angedeutet, echte URL/API-Key etc. nötig):
-            # response = requests.post("https://mein-backend.de/match", files={"template": buf, "plan": ...})
-            # result = response.json()
-    elif coords is not None:
+# --- Template ausschneiden nach 2 Klicks ---
+if coords is not None and len(coords) >= 2:
+    st.success("✅ Zwei Punkte gesetzt, Ausschnitt wird erstellt.")
+    x1, y1 = coords[0]["x"], coords[0]["y"]
+    x2, y2 = coords[1]["x"], coords[1]["y"]
+    
+    # Rückskalieren auf Originalgröße
+    left, top = int(min(x1, x2) / zoom_factor), int(min(y1, y2) / zoom_factor)
+    right, bottom = int(max(x1, x2) / zoom_factor), int(max(y1, y2) / zoom_factor)
+
+    cropped = image_pil_full.crop((left, top, right, bottom))
+    st.subheader("📦 Ausgeschnittenes Template")
+    st.image(cropped, caption="Dein Template-Ausschnitt", use_container_width=True)
+
+    buf = io.BytesIO()
+    cropped.save(buf, format="PNG")
+    byte_im = buf.getvalue()
+
+    st.download_button(
+        label="💾 Template als PNG speichern",
+        data=byte_im,
+        file_name="template.png",
+        mime="image/png"
+    )
+
+    st.success("✅ Template erfolgreich ausgeschnitten!")
+    st.markdown("---")
+
+    # --- Vorbereitung für Matching-Backend-Aufruf ---
+    st.info("🧠 Nächster Schritt: Template Matching via externem Backend")
+
+    if st.button("🔄 Externes Matching starten"):
+        st.warning("🔹 Hier würde ein Request an das Backend erfolgen (z. B. via FastAPI).")
+else:
+    if coords is not None:
         st.info("ℹ️ Bitte setze zwei Punkte in der Vorschau: Oben links und unten rechts.")
-    st.info("⬆️ Bitte lade zunächst eine PDF-Datei hoch.")
 
 
 
