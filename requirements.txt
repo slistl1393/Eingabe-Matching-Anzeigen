@@ -3,7 +3,6 @@ pymupdf
 Pillow
 numpy
 plotly
-streamlit-image-coordinates
 
 
 
