@@ -1,9 +1,14 @@
 services:
   - type: web
-    name: Eingabe-Matching-Anzeigen
+    name: Eingabe-Matching-Anzeigen  # Ändere dies, um den tatsächlichen Dienstnamen zu verwenden
+    env: python
     region: frankfurt
-    env: docker
-    dockerfilePath: ./Dockerfile
+    buildCommand: |
+      apt-get update && apt-get install -y tesseract-ocr
+      ln -s /usr/bin/tesseract /usr/local/bin/tesseract  # Sicherstellen, dass tesseract im PATH verfügbar ist
+      tesseract --version  # Überprüft, ob tesseract korrekt installiert wurde
+      pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.grundfunktion:app --host 0.0.0.0 --port 10000
     envVars:
       - key: OPENAI_API_KEY
         sync: false
