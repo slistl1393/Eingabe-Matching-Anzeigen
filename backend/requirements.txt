@@ -2,9 +2,10 @@ fastapi
 uvicorn
 openai
 pytesseract
-pdf2image
 opencv-python
-opencv-python-headless
-numpy
 requests
+pdf2image
+numpy
+pillow
 python-multipart
+
