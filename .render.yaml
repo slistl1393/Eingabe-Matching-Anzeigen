@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: template-matching-api
+    name: Eingabe-Matching-Anzeigen
     region: frankfurt
     env: docker
     dockerfilePath: ./Dockerfile
