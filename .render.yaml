@@ -5,8 +5,8 @@ services:
     region: frankfurt
     buildCommand: |
       apt-get update && apt-get install -y tesseract-ocr
-      ln -s /usr/bin/tesseract /usr/local/bin/tesseract  # Sicherstellen, dass tesseract im PATH verfügbar ist
-      tesseract --version  # Überprüft, ob tesseract korrekt installiert wurde
+      ln -sf /usr/bin/tesseract /usr/local/bin/tesseract  # Stelle sicher, dass Tesseract korrekt verlinkt wird
+      tesseract --version  # Überprüft, ob Tesseract korrekt installiert wurde
       pip install -r backend/requirements.txt
     startCommand: uvicorn backend.grundfunktion:app --host 0.0.0.0 --port 10000
     envVars:
