@@ -1,23 +1,24 @@
-# Verwende das Python 3.11 Base Image
+# Verwenden von Python als Basis-Image
 FROM python:3.11-slim
 
-# Installiere Tesseract und andere Abhängigkeiten
-RUN apt-get update && apt-get install -y \
-    tesseract-ocr \
-    libsm6 \
-    libxext6 \
-    libxrender1 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Erstelle und setze das Arbeitsverzeichnis
+# Setze das Arbeitsverzeichnis im Container
 WORKDIR /app
 
-# Kopiere die requirements.txt und installiere Python-Abhängigkeiten
+# Kopiere die Anforderungen in den Container
 COPY requirements.txt /app/
-RUN pip install --no-cache-dir -r requirements.txt
 
-# Kopiere den Rest des Codes
+# Installiere systemweite Abhängigkeiten (wie tesseract)
+RUN apt-get update && apt-get install -y tesseract-ocr
+
+# Installiere Python-Abhängigkeiten
+RUN pip install -r requirements.txt
+
+# Kopiere den gesamten Code ins Arbeitsverzeichnis
 COPY . /app/
 
-# Setze den Startbefehl
-CMD ["uvicorn", "backend.grundfunktion:app", "--host", "0.0.0.0", "--port", "10000"]
+# Stelle sicher, dass der Pfad für tesseract korrekt ist
+RUN ln -s /usr/bin/tesseract /usr/local/bin/tesseract
+
+# Setze den Befehl, um die FastAPI-Anwendung zu starten
+CMD ["uvicorn", "backend.app:app", "--host", "0.0.0.0", "--port", "10000"]
+
