@@ -40,12 +40,16 @@ def classify_with_openai(image, box):
     ocr_text = pytesseract.image_to_string(text_area).strip()
     img_base64 = encode_image_to_base64(symbol)
 
-    prompt = f"""
-    Du bekommst ein Symbolbild und angrenzenden Beschreibungstext.
-    Verwende es nur, wenn der Text "Egcobox" oder "Isokorb" enthält.
-    Text: """{ocr_text}"""
-    Antworte mit: "verwenden" oder "ignorieren"
-    """
+    prompt = f'''
+        Du bekommst links ein Symbolbild und rechts angrenzenden Beschreibungstext.
+        Verwende es nur, wenn der Text "Egcobox" oder "Isokorb" enthält.
+
+        Beschreibungstext:
+        \"\"\"{ocr_text}\"\"\"
+
+        Antworte mit: "verwenden" oder "ignorieren"
+    '''
+
 
     response = openai_client.chat.completions.create(
         model="gpt-4o",
