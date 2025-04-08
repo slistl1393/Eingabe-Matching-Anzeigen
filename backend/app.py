@@ -8,6 +8,9 @@ from grundfunktion import run_full_pipeline
 
 app = FastAPI()
 
+import subprocess
+result = subprocess.run(['tesseract', '--version'], stdout=subprocess.PIPE)
+print(result.stdout.decode())
 
 @app.post("/process")
 async def process_files(
