@@ -1,12 +1,16 @@
 services:
   - type: web
-    name: Eingabe-Matching-Anzeigen  # Ändere dies, um den tatsächlichen Dienstnamen zu verwenden
+    name: Eingabe-Matching-Anzeigen
     env: python
     region: frankfurt
     buildCommand: |
+      # Update the package list and install tesseract OCR
       apt-get update && apt-get install -y tesseract-ocr
-      ln -sf /usr/bin/tesseract /usr/local/bin/tesseract  # Stelle sicher, dass Tesseract korrekt verlinkt wird
-      tesseract --version  # Überprüft, ob Tesseract korrekt installiert wurde
+      # Ensure that tesseract is linked correctly
+      ln -sf /usr/bin/tesseract /usr/local/bin/tesseract
+      # Check if tesseract is installed correctly
+      tesseract --version
+      # Install required python dependencies
       pip install -r backend/requirements.txt
     startCommand: uvicorn backend.grundfunktion:app --host 0.0.0.0 --port 10000
     envVars:
@@ -14,5 +18,6 @@ services:
         sync: false
       - key: GITHUB_TOKEN
         sync: false
+
 
 
