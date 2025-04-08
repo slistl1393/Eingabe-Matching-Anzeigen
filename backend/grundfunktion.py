@@ -41,15 +41,14 @@ def classify_with_openai(image, box):
     img_base64 = encode_image_to_base64(symbol)
 
     prompt = f'''
-        Du bekommst links ein Symbolbild und rechts angrenzenden Beschreibungstext.
-        Verwende es nur, wenn der Text "Egcobox" oder "Isokorb" enthält.
+    Du bekommst ein Symbolbild und angrenzenden Beschreibungstext.
+    Verwende es nur, wenn der Text "Egcobox" oder "Isokorb" enthält.
 
-        Beschreibungstext:
-        \"\"\"{ocr_text}\"\"\"
+    Beschreibungstext:
+    """{ocr_text}"""
 
-        Antworte mit: "verwenden" oder "ignorieren"
+    Antworte mit: "verwenden" oder "ignorieren"
     '''
-
 
     response = openai_client.chat.completions.create(
         model="gpt-4o",
@@ -65,6 +64,7 @@ def classify_with_openai(image, box):
         max_tokens=10
     )
     decision = response.choices[0].message.content.strip().lower()
+    print(f"🔍 Entscheidung: {decision} | OCR: {ocr_text}")
     return decision, ocr_text
 
 
@@ -136,6 +136,9 @@ def run_full_pipeline(plan_path, verzeichnis_path, output_dir):
     plan = cv2.imread(plan_path)
     verzeichnis = cv2.imread(verzeichnis_path)
 
+    if plan is None or verzeichnis is None:
+        raise ValueError("⛔ plan.png oder verzeichnis.png konnte nicht geladen werden.")
+
     boxes = detect_symbols(verzeichnis)
     templates = []
 
@@ -143,6 +146,7 @@ def run_full_pipeline(plan_path, verzeichnis_path, output_dir):
         try:
             decision, bauteil = classify_with_openai(verzeichnis, box)
         except Exception as e:
+            print(f"❌ Fehler bei classify_with_openai: {e}")
             continue
         if decision == "verwenden":
             x, y, w, h = box
@@ -162,7 +166,6 @@ def run_full_pipeline(plan_path, verzeichnis_path, output_dir):
 
     filtered = nms(all_matches)
 
-    # Export JSONs
     json_output_dir = os.path.join(output_dir, "json_output")
     os.makedirs(json_output_dir, exist_ok=True)
 
