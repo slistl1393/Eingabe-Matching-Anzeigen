@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+openai
+pytesseract
+pdf2image
+opencv-python-headless
+numpy
+requests
+python-multipart
