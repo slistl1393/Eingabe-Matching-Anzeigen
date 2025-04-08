@@ -36,9 +36,9 @@ if uploaded_pdf:
     preview_array = np.array(image)
     fig = px.imshow(preview_array, binary_format='png')
     fig.update_layout(
-    dragmode="zoom",
-    height=850,  # oder was für dich passt
-    margin=dict(l=10, r=10, t=30, b=10),
+        dragmode="zoom",
+        height=850,
+        margin=dict(l=10, r=10, t=30, b=10),
     )
     fig.update_yaxes(scaleanchor="x", scaleratio=1)
 
@@ -55,23 +55,30 @@ if uploaded_pdf:
     st.plotly_chart(fig, use_container_width=True)
 
     # --- Ausschneiden & Weiterverarbeitung ---
-    if st.button("💾 Ausschneiden & weiterverarbeiten"):
+    if st.button("💾 Verzeichnis & Plan als PNG exportieren"):
+        # Verzeichnis ausschneiden
         left = int(min(x1, x2))
         top = int(min(y1, y2))
         right = int(max(x1, x2))
         bottom = int(max(y1, y2))
-
         cropped = original_image.crop((left, top, right, bottom))
+
         st.subheader("📦 Ausgeschnittener Bereich")
         st.image(cropped, caption="Dein Verzeichnis", use_container_width=True)
 
-        buf = io.BytesIO()
-        cropped.save(buf, format="PNG")
-        st.download_button("⬇️ Verzeichnis herunterladen", data=buf.getvalue(), file_name="Verzeichnis.png", mime="image/png")
+        # → Download Buttons für Plan und Verzeichnis
+        plan_buf = io.BytesIO()
+        original_image.save(plan_buf, format="PNG")
+        st.download_button("⬇️ Gesamten Plan herunterladen", data=plan_buf.getvalue(), file_name="plan.png", mime="image/png")
 
-        st.success("✅ Ausschneiden erfolgreich. Jetzt bereit für weitere Schritte.")
+        verzeichnis_buf = io.BytesIO()
+        cropped.save(verzeichnis_buf, format="PNG")
+        st.download_button("⬇️ Verzeichnis herunterladen", data=verzeichnis_buf.getvalue(), file_name="verzeichnis.png", mime="image/png")
+
+        st.success("✅ Beides exportiert. Jetzt bereit für den API-Test!")
 else:
     st.info("⬆️ Bitte lade eine PDF hoch, um zu starten.")
+
 
 
 
