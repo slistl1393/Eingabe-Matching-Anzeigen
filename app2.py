@@ -6,7 +6,7 @@ import numpy as np
 import plotly.express as px
 
 st.set_page_config(page_title="PDF-Template Ausschneider", layout="wide")
-st.title("📐 Template aus PDF ausschneiden – mit Zoom & Weiterverarbeitung")
+st.title("📐 Verzeichnis aus PDF ausschneiden")
 
 # --- PDF Upload ---
 uploaded_pdf = st.file_uploader("📄 PDF hochladen", type=["pdf"])
@@ -22,7 +22,7 @@ if uploaded_pdf:
     image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
     original_image = image.copy()
 
-    st.subheader("✂️ Bereich auswählen – Koordinaten eingeben")
+    st.subheader("✂️ Verzeichnisbereich auswählen – Koordinaten eingeben")
     col1, col2 = st.columns(2)
     with col1:
         x1 = st.number_input("🔹 x1", min_value=0, max_value=image.width, value=100)
@@ -63,11 +63,11 @@ if uploaded_pdf:
 
         cropped = original_image.crop((left, top, right, bottom))
         st.subheader("📦 Ausgeschnittener Bereich")
-        st.image(cropped, caption="Dein Template", use_container_width=True)
+        st.image(cropped, caption="Dein Verzeichnis", use_container_width=True)
 
         buf = io.BytesIO()
         cropped.save(buf, format="PNG")
-        st.download_button("⬇️ Template herunterladen", data=buf.getvalue(), file_name="template.png", mime="image/png")
+        st.download_button("⬇️ Verzeichnis herunterladen", data=buf.getvalue(), file_name="Verzeichnis.png", mime="image/png")
 
         st.success("✅ Ausschneiden erfolgreich. Jetzt bereit für weitere Schritte.")
 else:
