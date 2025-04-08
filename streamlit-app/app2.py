@@ -42,7 +42,6 @@ if uploaded_pdf:
     )
     fig.update_yaxes(scaleanchor="x", scaleratio=1)
 
-    # Marker anzeigen, wenn Koordinaten gesetzt
     if (x1 != x2) and (y1 != y2):
         fig.add_scatter(
             x=[x1, x2],
@@ -51,31 +50,43 @@ if uploaded_pdf:
             marker=dict(size=10, color="red"),
             name="Auswahlpunkte"
         )
+    else:
+        st.warning("⚠️ Setze bitte zwei unterschiedliche Punkte für die Auswahl.")
 
     st.plotly_chart(fig, use_container_width=True)
 
     # --- Ausschneiden & Weiterverarbeitung ---
     if st.button("💾 Verzeichnis & Plan als PNG exportieren"):
-        # Verzeichnis ausschneiden
         left = int(min(x1, x2))
         top = int(min(y1, y2))
         right = int(max(x1, x2))
         bottom = int(max(y1, y2))
-        cropped = original_image.crop((left, top, right, bottom))
 
-        st.subheader("📦 Ausgeschnittener Bereich")
-        st.image(cropped, caption="Dein Verzeichnis", use_container_width=True)
+        if left == right or top == bottom:
+            st.error("❌ Ungültige Auswahl – x1 ≠ x2 und y1 ≠ y2 erforderlich.")
+        else:
+            cropped = original_image.crop((left, top, right, bottom))
+            st.subheader("📦 Ausgeschnittener Bereich")
+            st.image(cropped, caption="Dein Verzeichnis", use_container_width=True)
 
-        # → Download Buttons für Plan und Verzeichnis
-        plan_buf = io.BytesIO()
-        original_image.save(plan_buf, format="PNG")
-        st.download_button("⬇️ Gesamten Plan herunterladen", data=plan_buf.getvalue(), file_name="plan.png", mime="image/png")
+            # Bilder in Session State speichern
+            plan_buf = io.BytesIO()
+            original_image.save(plan_buf, format="PNG")
+            st.session_state["plan_image"] = plan_buf.getvalue()
 
-        verzeichnis_buf = io.BytesIO()
-        cropped.save(verzeichnis_buf, format="PNG")
-        st.download_button("⬇️ Verzeichnis herunterladen", data=verzeichnis_buf.getvalue(), file_name="verzeichnis.png", mime="image/png")
+            verzeichnis_buf = io.BytesIO()
+            cropped.save(verzeichnis_buf, format="PNG")
+            st.session_state["verzeichnis_image"] = verzeichnis_buf.getvalue()
 
-        st.success("✅ Beides exportiert. Jetzt bereit für den API-Test!")
+            st.success("✅ Bilder erstellt – jetzt kannst du sie unten herunterladen.")
+
+    # --- Download Buttons ---
+    if "plan_image" in st.session_state and "verzeichnis_image" in st.session_state:
+        st.subheader("⬇️ Download")
+        st.download_button("⬇️ Plan herunterladen", data=st.session_state["plan_image"],
+                           file_name="plan.png", mime="image/png")
+        st.download_button("⬇️ Verzeichnis herunterladen", data=st.session_state["verzeichnis_image"],
+                           file_name="verzeichnis.png", mime="image/png")
 else:
     st.info("⬆️ Bitte lade eine PDF hoch, um zu starten.")
 
