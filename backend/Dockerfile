@@ -1,24 +1,23 @@
-# Verwenden von Python als Basis-Image
-FROM python:3.11-slim
+# Start von einem Python 3.11-Image
+FROM python:3.11
 
-# Setze das Arbeitsverzeichnis im Container
+# Arbeitsverzeichnis festlegen
 WORKDIR /app
 
-# Kopiere die Anforderungen in den Container
-COPY requirements.txt /app/
-
-# Installiere systemweite Abhängigkeiten (wie tesseract)
-RUN apt-get update && apt-get install -y tesseract-ocr
-
-# Installiere Python-Abhängigkeiten
+# Anforderungen installieren
+COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-# Kopiere den gesamten Code ins Arbeitsverzeichnis
-COPY . /app/
+# Tesseract installieren
+RUN apt-get update && apt-get install -y tesseract-ocr
 
-# Stelle sicher, dass der Pfad für tesseract korrekt ist
-RUN ln -s /usr/bin/tesseract /usr/local/bin/tesseract
+# Arbeitsverzeichnis ins Container verlagern
+COPY ./backend /app/backend
 
-# Setze den Befehl, um die FastAPI-Anwendung zu starten
+# Exponiere den Port
+EXPOSE 10000
+
+# Starten der API mit uvicorn
 CMD ["uvicorn", "backend.app:app", "--host", "0.0.0.0", "--port", "10000"]
+
 
