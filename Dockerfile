@@ -1,22 +1,23 @@
-# Start from a Python base image
+# Verwende das Python 3.11 Base Image
 FROM python:3.11-slim
 
-# Install necessary system dependencies, including Tesseract
-RUN apt-get update && apt-get install -y tesseract-ocr \
-    && apt-get clean \
+# Installiere Tesseract und andere Abhängigkeiten
+RUN apt-get update && apt-get install -y \
+    tesseract-ocr \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Set the working directory in the container
+# Erstelle und setze das Arbeitsverzeichnis
 WORKDIR /app
 
-# Copy the requirements.txt to the container
-COPY backend/requirements.txt .
-
-# Install Python dependencies
+# Kopiere die requirements.txt und installiere Python-Abhängigkeiten
+COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code
-COPY backend /app
+# Kopiere den Rest des Codes
+COPY . /app/
 
-# Run the app using Uvicorn
-CMD ["uvicorn", "grundfunktion:app", "--host", "0.0.0.0", "--port", "10000"]
+# Setze den Startbefehl
+CMD ["uvicorn", "backend.grundfunktion:app", "--host", "0.0.0.0", "--port", "10000"]
