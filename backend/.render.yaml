@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: Eingabe-Matching-Anzeigen  # Der Name des Webservices
+    env: docker  # Die Umgebung auf Docker setzen
+    region: frankfurt
+    buildCommand: docker build -t template-matching-api .  # Docker-Build Befehl
+    startCommand: docker run -p 10000:10000 template-matching-api  # Docker Run Befehl
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GITHUB_TOKEN
+        sync: false
+
