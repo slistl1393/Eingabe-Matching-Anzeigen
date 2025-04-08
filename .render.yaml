@@ -1,15 +1,13 @@
 services:
   - type: web
     name: template-matching-api
-    env: python
     region: frankfurt
-    buildCommand: |
-      apt-get update && apt-get install -y tesseract-ocr
-      pip install -r backend/requirements.txt
-    startCommand: uvicorn backend.grundfunktion:app --host 0.0.0.0 --port 10000
+    env: docker
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: OPENAI_API_KEY
         sync: false
       - key: GITHUB_TOKEN
         sync: false
+
 
